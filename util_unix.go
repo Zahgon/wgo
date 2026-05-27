@@ -5,13 +5,7 @@ package main
 import (
 	"bytes"
 	"io"
-	"os"
 	"os/exec"
-	"runtime"
-	"strings"
-	"syscall"
-	"unicode/utf8"
-	"unsafe"
 )
 
 // NOTE: We shouldn't encounter the macOS file limit of 256 anymore now that
@@ -27,80 +21,57 @@ const (
 
 // stop stops the command and all its child processes.
 func stop(cmd *exec.Cmd) {
+	_ = "STUB: not implemented"
 	// https://stackoverflow.com/questions/22470193/why-wont-go-kill-a-child-process-correctly
 	// https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
-	pgid := -cmd.Process.Pid
-	_ = syscall.Kill(pgid, syscall.SIGTERM)
+	return
 }
 
 // https://stackoverflow.com/questions/22470193/why-wont-go-kill-a-child-process-correctly
 // https://medium.com/@felixge/killing-a-child-process-and-all-of-its-children-in-go-54079af94773
-func setpgid(cmd *exec.Cmd) {
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-}
+func setpgid(cmd *exec.Cmd) { _ = "STUB: not implemented"; return }
 
 // flushStdin tells the OS to flush the text currently buffered in stdin.
 //
 // Using raw numbers here instead of importing package constants to avoid
 // creating a bunch more files to use conditional compilation to select the
 // right package constants for the os and arch.
-func flushStdin(r io.Reader) {
-	f, ok := r.(*os.File)
-	if !ok {
-		return
-	}
-	switch runtime.GOOS {
-	case "linux":
-		// ioctl(fd, TCFLSH, TCIFLUSH)
-		syscall.Syscall(
-			linuxSYSIOCTL(),
-			f.Fd(),
-			linuxTCFLSH(),
-			0, /* golang.org/x/sys/unix.TCIFLUSH on linux */
-		)
-	case "darwin", "dragonfly", "freebsd", "netbsd", "openbsd":
-		// ioctl(fd, TIOCFLUSH, &TCIFLUSH)
-		flags := int32(1 /* golang.org/x/sys/unix.TCIFLUSH */)
-		syscall.Syscall(
-			54, /* syscall.SYS_IOCTL on darwin, dragonfly, freebsd, netbsd, openbsd */
-			f.Fd(),
-			0x80047410, /* golang.org/x/sys/unix.TIOCFLUSH on darwin, dragonfly, freebsd, netbsd, openbsd */
-			uintptr(unsafe.Pointer(&flags)),
-		)
-	}
-}
+func flushStdin(r io.Reader) { _ = "STUB: not implemented"; return }
+
+// ioctl(fd, TCFLSH, TCIFLUSH)
+
+/* golang.org/x/sys/unix.TCIFLUSH on linux */
+
+// ioctl(fd, TIOCFLUSH, &TCIFLUSH)
+/* golang.org/x/sys/unix.TCIFLUSH */
+
+/* syscall.SYS_IOCTL on darwin, dragonfly, freebsd, netbsd, openbsd */
+
+/* golang.org/x/sys/unix.TIOCFLUSH on darwin, dragonfly, freebsd, netbsd, openbsd */
 
 // linuxSYSIOCTL returns syscall.SYS_IOCTL based on runtime.GOARCH.
-func linuxSYSIOCTL() uintptr {
-	switch runtime.GOARCH {
-	case "amd64":
-		return 16 /* syscall.SYS_IOCTL on linux/amd64 */
-	case "arm64", "loong64", "riscv64":
-		return 29 /* syscall.SYS_IOCTL on linux/arm64, linux/loong64, linux/riscv64 */
-	case "mips", "mipsle":
-		return 4054 /* syscall.SYS_IOCTL on linux/mips, linux/mipsle */
-	case "mips64", "mips64le":
-		return 5015 /* syscall.SYS_IOCTL on linux/mips64, linux/mips64le */
-	default:
-		return 54 /* syscall.SYS_IOCTL on other linux architectures */
-	}
-}
+func linuxSYSIOCTL() uintptr { _ = "STUB: not implemented"; return 0 }
+
+/* syscall.SYS_IOCTL on linux/amd64 */
+
+/* syscall.SYS_IOCTL on linux/arm64, linux/loong64, linux/riscv64 */
+
+/* syscall.SYS_IOCTL on linux/mips, linux/mipsle */
+
+/* syscall.SYS_IOCTL on linux/mips64, linux/mips64le */
+
+/* syscall.SYS_IOCTL on other linux architectures */
 
 // linuxSYSIOCTL returns golang.org/x/sys/unix.TCFLSH based on runtime.GOARCH.
-func linuxTCFLSH() uintptr {
-	switch runtime.GOARCH {
-	case "mips", "mips64", "mips64le", "mipsle":
-		return 0x5407 /* golang.org/x/sys/unix.TCFLSH on linux/mips, linux/mips64, linux/mips64le, linux/mipsle */
-	case "ppc", "ppc64", "ppc64le":
-		return 0x2000741f /* golang.org/x/sys/unix.TCFLSH on linux/ppc, linux/ppc64, linux/ppc64le */
-	case "sparc64":
-		return 0x20005407 /* golang.org/x/sys/unix.TCFLSH on linux/sparc64 */
-	default:
-		return 0x540b /* golang.org/x/sys/unix.TCFLSH on other linux architectures */
-	}
-}
+func linuxTCFLSH() uintptr { _ = "STUB: not implemented"; return 0 }
+
+/* golang.org/x/sys/unix.TCFLSH on linux/mips, linux/mips64, linux/mips64le, linux/mipsle */
+
+/* golang.org/x/sys/unix.TCFLSH on linux/ppc, linux/ppc64, linux/ppc64le */
+
+/* golang.org/x/sys/unix.TCFLSH on linux/sparc64 */
+
+/* golang.org/x/sys/unix.TCFLSH on other linux architectures */
 
 // joinArgs joins the arguments of the command into a string which can then be
 // passed to `exec.Command("sh", "-c", $STRING)`. Examples:
@@ -109,9 +80,10 @@ func linuxTCFLSH() uintptr {
 //
 // ["echo", "hello goodbye"] => echo 'hello goodbye'
 func joinArgs(args []string) string {
+	_ = "STUB: not implemented"
 	// https://github.com/kballard/go-shellquote/blob/master/quote.go
 	//
-	// Copyright (C) 2014 Kevin Ballard
+	// # Copyright (C) 2014 Kevin Ballard
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining
 	// a copy of this software and associated documentation files (the "Software"),
@@ -130,20 +102,14 @@ func joinArgs(args []string) string {
 	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 	// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 	// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-	var buf bytes.Buffer
-	for i, arg := range args {
-		if i != 0 {
-			buf.WriteByte(' ')
-		}
-		quote(arg, &buf)
-	}
-	return buf.String()
+	return ""
 }
 
 func quote(word string, buf *bytes.Buffer) {
+	_ = "STUB: not implemented"
 	// https://github.com/kballard/go-shellquote/blob/master/quote.go
 	//
-	// Copyright (C) 2014 Kevin Ballard
+	// # Copyright (C) 2014 Kevin Ballard
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining
 	// a copy of this software and associated documentation files (the "Software"),
@@ -162,77 +128,24 @@ func quote(word string, buf *bytes.Buffer) {
 	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 	// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 	// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// We want to try to produce a "nice" output. As such, we will
-	// backslash-escape most characters, but if we encounter a space, or if we
-	// encounter an extra-special char (which doesn't work with
-	// backslash-escaping) we switch over to quoting the whole word. We do this
-	// with a space because it's typically easier for people to read multi-word
-	// arguments when quoted with a space rather than with ugly backslashes
-	// everywhere.
-	origLen := buf.Len()
-
-	if len(word) == 0 {
-		// oops, no content
-		buf.WriteString("''")
-		return
-	}
-
-	cur, prev := word, word
-	atStart := true
-	for len(cur) > 0 {
-		c, l := utf8.DecodeRuneInString(cur)
-		cur = cur[l:]
-		if strings.ContainsRune(specialChars, c) || (atStart && strings.ContainsRune(prefixChars, c)) {
-			// copy the non-special chars up to this point
-			if len(cur) < len(prev) {
-				buf.WriteString(prev[0 : len(prev)-len(cur)-l])
-			}
-			buf.WriteByte('\\')
-			buf.WriteRune(c)
-			prev = cur
-		} else if strings.ContainsRune(extraSpecialChars, c) {
-			// start over in quote mode
-			buf.Truncate(origLen)
-			goto quote
-		}
-		atStart = false
-	}
-	if len(prev) > 0 {
-		buf.WriteString(prev)
-	}
 	return
-
-quote:
-	// quote mode
-	// Use single-quotes, but if we find a single-quote in the word, we need
-	// to terminate the string, emit an escaped quote, and start the string up
-	// again
-	inQuote := false
-	for len(word) > 0 {
-		i := strings.IndexRune(word, '\'')
-		if i == -1 {
-			break
-		}
-		if i > 0 {
-			if !inQuote {
-				buf.WriteByte('\'')
-				inQuote = true
-			}
-			buf.WriteString(word[0:i])
-		}
-		word = word[i+1:]
-		if inQuote {
-			buf.WriteByte('\'')
-			inQuote = false
-		}
-		buf.WriteString("\\'")
-	}
-	if len(word) > 0 {
-		if !inQuote {
-			buf.WriteByte('\'')
-		}
-		buf.WriteString(word)
-		buf.WriteByte('\'')
-	}
 }
+
+// We want to try to produce a "nice" output. As such, we will
+// backslash-escape most characters, but if we encounter a space, or if we
+// encounter an extra-special char (which doesn't work with
+// backslash-escaping) we switch over to quoting the whole word. We do this
+// with a space because it's typically easier for people to read multi-word
+// arguments when quoted with a space rather than with ugly backslashes
+// everywhere.
+
+// oops, no content
+
+// copy the non-special chars up to this point
+
+// start over in quote mode
+
+// quote mode
+// Use single-quotes, but if we find a single-quote in the word, we need
+// to terminate the string, emit an escaped quote, and start the string up
+// again

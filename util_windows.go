@@ -4,33 +4,27 @@ package main
 
 import (
 	"io"
-	"os"
 	"os/exec"
-	"strconv"
-	"strings"
-
-	"golang.org/x/sys/windows"
 )
 
 // stop stops the command and all its child processes.
 func stop(cmd *exec.Cmd) {
+	_ = "STUB: not implemented"
 	// https://stackoverflow.com/a/44551450
-	killCmd := exec.Command("taskkill.exe", "/t", "/f", "/pid", strconv.Itoa(cmd.Process.Pid))
-	_ = killCmd.Run()
+	return
 }
 
 // setpgid is a no-op on windows.
-func setpgid(cmd *exec.Cmd) {}
+func setpgid(cmd *exec.Cmd) {
+	_ = "STUB: not implemented"
 
-// flushStdin tells the OS to flush the text currently buffered in stdin.
-func flushStdin(r io.Reader) {
-	f, ok := r.(*os.File)
-	if !ok {
-		return
-	}
-	// FlushConsoleInputBuffer(handle)
-	_ = windows.FlushConsoleInputBuffer(windows.Handle(f.Fd()))
+	// flushStdin tells the OS to flush the text currently buffered in stdin.
+	return
 }
+
+func flushStdin(r io.Reader) { _ = "STUB: not implemented"; return }
+
+// FlushConsoleInputBuffer(handle)
 
 // joinArgs joins the arguments of the command into a string which can then be
 // passed to `exec.Command("pwsh.exe", "-command", $STRING)`. Examples:
@@ -39,25 +33,9 @@ func flushStdin(r io.Reader) {
 //
 // ["echo", "hello goodbye"] => echo 'hello goodbye'
 func joinArgs(args []string) string {
+	_ = "STUB: not implemented"
 	// references:
 	// https://www.rlmueller.net/PowerShellEscape.htm
 	// https://stackoverflow.com/a/11231504
-	var b strings.Builder
-	for i, arg := range args {
-		if i == 0 {
-			b.WriteString(arg)
-			continue
-		}
-		b.WriteString(" ")
-		if arg == "" {
-			b.WriteString("''")
-			continue
-		}
-		if !strings.ContainsAny(arg, " '`$(){}<>|&;*") {
-			b.WriteString(arg)
-			continue
-		}
-		b.WriteString("'" + strings.ReplaceAll(arg, "'", "''") + "'")
-	}
-	return b.String()
+	return ""
 }
